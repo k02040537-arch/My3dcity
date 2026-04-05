@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Nitesh | City Metaverse Pro</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap');
+        
+        body { margin: 0; overflow: hidden; background-color: #050508; touch-action: none; font-family: 'Space Grotesk', sans-serif; }
+        
+        /* Premium UI */
+        #ui { position: absolute; top: 30px; left: 30px; color: #fff; pointer-events: none; z-index: 10; }
+        #ui h1 { margin: 0; font-size: 24px; letter-spacing: 4px; text-transform: uppercase; color: #00ffcc; }
+        #ui p { margin: 5px 0; font-size: 12px; color: #666; letter-spacing: 2px; }
+
+        /* Crosshair */
+        #crosshair { position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: #fff; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 100; }
+
+        /* Joystick for Mobile */
+        #mobile-controls { display: none; position: absolute; bottom: 40px; left: 40px; width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); z-index: 50; }
+        #joystick-knob { position: absolute; top: 50%; left: 50%; width: 45px; height: 45px; background: #fff; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+
+        @media (max-width: 768px) { #mobile-controls { display: block; } }
+
+        /* Loader */
+        #loader { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #050508; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #fff; z-index: 999; transition: 1s; }
+        .spinner { width: 30px; height: 30px; border: 2px solid rgba(0,255,204,0.1); border-top-color: #00ffcc; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <div style="letter-spacing: 5px; font-size: 12px;">LOADING METAVERSE</div>
+    </div>
+
+    <div id="crosshair"></div>
+    <div id="ui">
+        <h1>CITY CORE</h1>
+        <p>NITESH BHUIMHAR • v2.0</p>
+    </div>
+
+    <div id="mobile-controls">
+        <div id="joystick-knob"></div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        // ==========================================
+        // 🛠️ SETTINGS & LINKS
+        // ==========================================
+        
+        // 🔴 YAHA APNA GITHUB RAW LINK DALEIN
+        const CITY_URL = 'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/city.glb'; 
+
+        const myLinks = [
+            { url: 'https://www.instagram.com/nitesh_jord', logo: 'https://img.icons8.com/fluency/256/instagram-new.png', x: -8, z: -8 },
+            { url: 'https://www.facebook.com/share/18FQsJrDJ5/', logo: 'https://img.icons8.com/color/256/facebook-new.png', x: -8, z: 8 },
+            { url: 'https://t.me/bhuimharniteshbhuimhar2', logo: 'https://img.icons8.com/color/256/telegram-app.png', x: 8, z: -8 },
+            { url: 'https://wa.me/917718906857', logo: 'https://img.icons8.com/color/256/whatsapp--v1.png', x: 8, z: 8 }
+        ];
+
+        function getLinkName(url) {
+            try { 
+                if(url.includes('t.me')) return "GOD NOVEL HINDI";
+                return new URL(url).hostname.replace('www.', '').split('.')[0].toUpperCase(); 
+            } catch { return "PORTAL"; }
+        }
+
+        // ==========================================
+        // 🌌 1. SCENE SETUP
+        // ==========================================
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050508);
+        scene.fog = new THREE.FogExp2(0x050508, 0.04);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 1.6, 15);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        document.body.appendChild(renderer.domElement);
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const sun = new THREE.DirectionalLight(0xffffff, 0.8);
+        sun.position.set(10, 20, 10);
+        scene.add(sun);
+
+        // ==========================================
+        // 🏙️ 2. GLB CITY LOADER
+        // ==========================================
+        const loader = new GLTFLoader();
+        loader.load(CITY_URL, 
+            (gltf) => {
+                const model = gltf.scene;
+                scene.add(model);
+                // Adjust model if needed
+                model.position.set(0, 0, 0);
+                model.scale.set(1, 1, 1); 
+                console.log("City Loaded!");
+                hideLoader();
+            },
+            undefined,
+            (err) => {
+                console.warn("City file not found, using fallback buildings.");
+                generateFallbackCity();
+                hideLoader();
+            }
+        );
+
+        function generateFallbackCity() {
+            const geo = new THREE.BoxGeometry(4, 1, 4);
+            const mat = new THREE.MeshStandardMaterial({ color: 0x1a1a1f });
+            for(let i=0; i<50; i++) {
+                const h = 5 + Math.random()*20;
+                const b = new THREE.Mesh(new THREE.BoxGeometry(4, h, 4), mat);
+                b.position.set((Math.random()-0.5)*100, h/2, (Math.random()-0.5)*100);
+                scene.add(b);
+            }
+        }
+
+        const floor = new THREE.Mesh(new THREE.PlaneGeometry(300,300), new THREE.MeshStandardMaterial({color:0x050505}));
+        floor.rotation.x = -Math.PI/2;
+        scene.add(floor);
+        scene.add(new THREE.GridHelper(300, 100, 0x111111, 0x080808));
+
+        // ==========================================
+        // 🏛️ 3. INTERACTIVE PORTALS
+        // ==========================================
+        const targets = [];
+        const texLoader = new THREE.TextureLoader();
+        texLoader.setCrossOrigin('anonymous');
+
+        myLinks.forEach(data => {
+            const group = new THREE.Group();
+            group.position.set(data.x, 0, data.z);
+
+            // Stand
+            const stand = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.4, 0.2, 32), new THREE.MeshStandardMaterial({color:0x111, metalness:0.8}));
+            group.add(stand);
+
+            // Auto-Label
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 512; canvas.height = 128;
+            ctx.font = 'bold 45px Arial'; ctx.fillStyle = 'white'; ctx.textAlign = 'center';
+            ctx.fillText(getLinkName(data.url), 256, 80);
+            const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas) }));
+            label.scale.set(3.5, 0.8, 1); label.position.y = 3.2;
+            group.add(label);
+
+            // Logo
+            texLoader.load(data.logo, (t) => {
+                const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t }));
+                s.scale.set(1.5, 1.5, 1); s.position.y = 1.6;
+                s.userData.url = data.url;
+                targets.push(s); group.add(s);
+            });
+            scene.add(group);
+        });
+
+        // ==========================================
+        // 🎮 4. MASTER CONTROLS (WASD + JOYSTICK)
+        // ==========================================
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; controls.dampingFactor = 0.05;
+        controls.maxPolarAngle = Math.PI/2 - 0.05; controls.enablePan = false;
+
+        const keys = {};
+        window.onkeydown = (e) => keys[e.key.toLowerCase()] = true;
+        window.onkeyup = (e) => keys[e.key.toLowerCase()] = false;
+
+        const joystick = { x: 0, y: 0 };
+        const jZone = document.getElementById('mobile-controls'), jKnob = document.getElementById('joystick-knob');
+        let jActive = false, jStart = { x: 0, y: 0 };
+
+        jZone.ontouchstart = (e) => { jActive = true; jStart = { x: e.touches[0].clientX, y: e.touches[0].clientY }; };
+        jZone.ontouchmove = (e) => {
+            if (!jActive) return;
+            let dx = e.touches[0].clientX - jStart.x, dy = e.touches[0].clientY - jStart.y;
+            const dist = Math.min(Math.sqrt(dx*dx + dy*dy), 40);
+            const angle = Math.atan2(dy, dx);
+            dx = Math.cos(angle) * dist; dy = Math.sin(angle) * dist;
+            jKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+            joystick.x = dx / 40; joystick.y = -dy / 40;
+        };
+        jZone.ontouchend = () => { jActive = false; joystick.x = 0; joystick.y = 0; jKnob.style.transform = 'translate(-50%, -50%)'; };
+
+        function update() {
+            const f = new THREE.Vector3(); camera.getWorldDirection(f); f.y = 0; f.normalize();
+            const r = new THREE.Vector3().crossVectors(f, camera.up).normalize();
+            const mx = (keys.d ? 1 : 0) - (keys.a ? 1 : 0) + joystick.x;
+            const mz = (keys.w ? 1 : 0) - (keys.s ? 1 : 0) + joystick.y;
+            if (mx || mz) {
+                const move = f.multiplyScalar(mz * 0.16).add(r.multiplyScalar(mx * 0.16));
+                camera.position.add(move); controls.target.add(move);
+            }
+            controls.update();
+            renderer.render(scene, camera);
+            requestAnimationFrame(update);
+        }
+
+        window.onclick = (e) => {
+            const ray = new THREE.Raycaster();
+            ray.setFromCamera({ x: (e.clientX/window.innerWidth)*2-1, y: -(e.clientY/window.innerHeight)*2+1 }, camera);
+            const hits = ray.intersectObjects(targets);
+            if (hits.length) window.open(hits[0].object.userData.url, '_blank');
+        };
+
+        function hideLoader() {
+            document.getElementById('loader').style.opacity = 0;
+            setTimeout(() => document.getElementById('loader').remove(), 1000);
+            update();
+        }
+    </script>
+</body>
+</html>
